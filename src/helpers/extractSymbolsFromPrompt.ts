@@ -1,17 +1,23 @@
 /**
- * Scans a prompt for symbols enclosed in asterisks (*) and returns an array of those symbols.
- * 
- * @param prompt 
- * @returns 
+ * Finds symbols wrapped in asterisks (e.g. *UserDTO* or *UserDTO[]*)
+ * and returns both the list of symbols and a version of the prompt
+ * with those asterisks removed.
  */
-export function extractSymbolsFromPrompt(prompt: string): string[] {
-  const symbolRegex = /\*([^\*]+)\*/g;
-  const matches: string[] = [];
+export function extractSymbolsFromPrompt(
+  prompt: string
+): { symbols: string[]; cleanedPrompt: string } {
+  const symbolRegex = /\$([a-zA-Z0-9]+)(\[\])?\$/g;
 
-  let match;
-  while ((match = symbolRegex.exec(prompt)) !== null) {
-    matches.push(match[1]);
-  }
+  const symbols: string[] = [];
 
-  return matches;
+  // Replace each match with the un-starred text, collecting the symbols as we go.
+  const cleanedPrompt = prompt.replace(
+    symbolRegex,
+    (_match, symbolName: string, arraySuffix: string | undefined) => {
+      symbols.push(symbolName);              // store "UserDTO"
+      return `${symbolName}${arraySuffix ?? ""}`; // keep "UserDTO[]" if present
+    }
+  );
+
+  return { symbols, cleanedPrompt };
 }

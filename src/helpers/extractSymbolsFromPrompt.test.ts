@@ -1,45 +1,56 @@
 import { extractSymbolsFromPrompt } from "./extractSymbolsFromPrompt";
 
-describe('extractSymbolsFromPrompt', () => {
-  it('should extract symbols enclosed in asterisks', () => {
-    const prompt = 'This is a *test* prompt with *multiple* symbols.';
-    const result = extractSymbolsFromPrompt(prompt);
-    expect(result).toEqual(['test', 'multiple']);
+describe("extractSymbolsFromPrompt", () => {
+  it("extracts symbols enclosed in asterisks and returns a cleaned prompt", () => {
+    const prompt =
+      "This is a $test$ prompt with $multiple$ symbols.";
+    const { symbols, cleanedPrompt } =
+      extractSymbolsFromPrompt(prompt);
+
+    expect(symbols).toEqual(["test", "multiple"]);
+    expect(cleanedPrompt).toBe(
+      "This is a test prompt with multiple symbols."
+    );
   });
 
-  it('should return an empty array if no symbols are found', () => {
-    const prompt = 'This is a prompt with no symbols.';
-    const result = extractSymbolsFromPrompt(prompt);
-    expect(result).toEqual([]);
+  it("extracts symbols that include array brackets", () => {
+    const prompt =
+      "This is a $test[]$ prompt with $multiple[]$ symbols.";
+    const { symbols, cleanedPrompt } =
+      extractSymbolsFromPrompt(prompt);
+
+    expect(symbols).toEqual(["test", "multiple"]);
+    expect(cleanedPrompt).toBe(
+      "This is a test[] prompt with multiple[] symbols."
+    );
   });
 
-  it('should handle prompts with consecutive symbols', () => {
-    const prompt = 'This is a *test**example* prompt.';
-    const result = extractSymbolsFromPrompt(prompt);
-    expect(result).toEqual(['test', 'example']);
+  it("returns an empty array and unchanged prompt if no symbols are found", () => {
+    const prompt = "This is a prompt with no symbols.";
+    const { symbols, cleanedPrompt } =
+      extractSymbolsFromPrompt(prompt);
+
+    expect(symbols).toEqual([]);
+    expect(cleanedPrompt).toBe(prompt);
   });
 
-  // it('should handle prompts with nested asterisks correctly', () => {
-  //   const prompt = 'This is a *test* with *nested *asterisks* symbols*.';
-  //   const result = extractSymbolsFromPrompt(prompt);
-  //   expect(result).toEqual(['test', 'nested *asterisks']);
-  // });
+  it("handles symbols at the start and end of the prompt", () => {
+    const prompt = "$start$ and end with $symbols$";
+    const { symbols, cleanedPrompt } =
+      extractSymbolsFromPrompt(prompt);
 
-  it('should handle prompts with symbols at the start and end', () => {
-    const prompt = '*start* and end with *symbols*.';
-    const result = extractSymbolsFromPrompt(prompt);
-    expect(result).toEqual(['start', 'symbols']);
+    expect(symbols).toEqual(["start", "symbols"]);
+    expect(cleanedPrompt).toBe(
+      "start and end with symbols"
+    );
   });
 
-  it('should handle an empty prompt', () => {
-    const prompt = '';
-    const result = extractSymbolsFromPrompt(prompt);
-    expect(result).toEqual([]);
-  });
+  it("handles an empty prompt", () => {
+    const prompt = "";
+    const { symbols, cleanedPrompt } =
+      extractSymbolsFromPrompt(prompt);
 
-  it('should handle prompts with only asterisks and no symbols', () => {
-    const prompt = '****';
-    const result = extractSymbolsFromPrompt(prompt);
-    expect(result).toEqual([]);
+    expect(symbols).toEqual([]);
+    expect(cleanedPrompt).toBe("");
   });
 });
