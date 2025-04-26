@@ -6,11 +6,11 @@ import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
 (async () => {
   console.log(await findSymbolDefinition("UserDTO"));
 
-  const newPrompts = await findAllNewPromptFiles("../example");
+  const newPrompts = await findAllNewPromptFiles("./example");
   console.log("New prompt files:");
   console.log(newPrompts);
 
-  const patterns = await loadPromptPatterns("../example");
+  const patterns = await loadPromptPatterns("./example");
   console.log("All patterns:");
   console.log(patterns);
 
