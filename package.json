@@ -1,4 +1,26 @@
 {
   "name": "ai-cascading-prompts",
-  "packageManager": "yarn@4.6.0"
+  "type": "module",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "node --loader ts-node/esm --experimental-specifier-resolution=node src/index.ts",
+    "build": "tsc"
+  },
+  "bin": "./dist/index.js",
+  "packageManager": "yarn@4.6.0",
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  "dependencies": {
+    "@types/node": "^22.15.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "ts-node-esm": "^0.0.6"
+  }
 }
