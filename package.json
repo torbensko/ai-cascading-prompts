@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "node --loader ts-node/esm --experimental-specifier-resolution=node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest"
   },
   "bin": "./dist/index.js",
   "packageManager": "yarn@4.6.0",
@@ -20,6 +21,9 @@
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/mocha": "^10.0.10",
+    "ts-jest": "^29.3.2",
     "ts-node": "^10.9.2",
     "ts-node-esm": "^0.0.6"
   }
