@@ -1,6 +1,6 @@
 import { SymbolDefinition } from "../helpers/findSymbolDefinition";
 
-export interface Prompt {
+export interface PromptDefinition {
   // the prompt found in the prompt file
   basePrompt: string;
   promptPath: string;
