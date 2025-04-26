@@ -1,4 +1,4 @@
-import { findSymbolDefinition } from "./helpers/findSymbolDefinition.js";
+import { findSymbolDefinition } from "./helpers/findSymbolDefinition";
 
 (async () => {
   console.log(await findSymbolDefinition("UserDTO"));

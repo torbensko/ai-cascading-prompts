@@ -1,11 +1,17 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findSymbolDefinition = findSymbolDefinition;
 // findSymbolDefinition.ts
-import fs from "node:fs/promises";
-import path from "node:path";
+const promises_1 = __importDefault(require("node:fs/promises"));
+const node_path_1 = __importDefault(require("node:path"));
 /**
  * Grep-style search for a symbol definition by plain text.
  * Language-agnostic: looks for regexes like `\\b(interface|class)\\s+UserDTO\\b`.
  */
-export async function findSymbolDefinition(symbol, opts = {}) {
+async function findSymbolDefinition(symbol, opts = {}) {
     const { rootDir = process.cwd(), exts = [
         ".ts", ".tsx", ".js", ".jsx",
         ".mjs", ".cjs",
@@ -32,12 +38,12 @@ export async function findSymbolDefinition(symbol, opts = {}) {
     /* 1. Recursively gather file paths                   */
     /* -------------------------------------------------- */
     async function* walk(dir) {
-        for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
-            const full = path.join(dir, entry.name);
+        for (const entry of await promises_1.default.readdir(dir, { withFileTypes: true })) {
+            const full = node_path_1.default.join(dir, entry.name);
             if (entry.isDirectory()) {
                 yield* walk(full);
             }
-            else if (exts.includes(path.extname(entry.name))) {
+            else if (exts.includes(node_path_1.default.extname(entry.name))) {
                 yield full;
             }
         }
@@ -46,7 +52,7 @@ export async function findSymbolDefinition(symbol, opts = {}) {
     /* 2. Scan each file line by line                     */
     /* -------------------------------------------------- */
     for await (const file of walk(rootDir)) {
-        const content = await fs.readFile(file, "utf8");
+        const content = await promises_1.default.readFile(file, "utf8");
         // quick reject before splitting by lines
         if (!regex.test(content))
             continue;

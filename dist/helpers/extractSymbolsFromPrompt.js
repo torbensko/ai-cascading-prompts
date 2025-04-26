@@ -1,10 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.extractSymbolsFromPrompt = extractSymbolsFromPrompt;
 /**
  * Scans a prompt for symbols enclosed in asterisks (*) and returns an array of those symbols.
  *
  * @param prompt
  * @returns
  */
-export function extractSymbolsFromPrompt(prompt) {
+function extractSymbolsFromPrompt(prompt) {
     const symbolRegex = /\*([^\*]+)\*/g;
     const matches = [];
     let match;

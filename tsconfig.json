@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "rootDir": "src",
-    "outDir": "dist",
+    "target": "ES2020",
+    "module": "CommonJS",
+    "outDir": "./dist",
     "strict": true,
-    "types": [
-      "node"
-    ],
-    "verbatimModuleSyntax": true // ✔ safe now – file is ESM
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "src/**/*"
