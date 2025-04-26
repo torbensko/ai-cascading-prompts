@@ -41,13 +41,13 @@ export async function findAllNewPromptFiles(
                 results.push({
                   promptPath,
                   targetPath,
-                });         // missing – add to list
+                });
               }
             }
           }
           // No need to recurse inside “.prompts”
         } else {
-          await walk(resolved);                   // keep descending
+          await walk(resolved);
         }
       }
     }

@@ -5,10 +5,11 @@ import path from "node:path";
 export interface SymbolDefinition {
   /** interface | class | enum | type | const | let | var | struct … */
   keyword: string;
-  fileName: string;      // absolute path
+  filePath: string;      // absolute path
   line: number;          // 1-based
   character: number;     // 1-based
   preview: string;       // first line of the match, trimmed
+  content: string;       // full file content
 }
 
 export interface FindOptions {
@@ -90,10 +91,11 @@ export async function findSymbolDefinition(
       if (m) {
         hits.push({
           keyword: m[0].split(/\s+/)[0],
-          fileName: file,
+          filePath: file,
           line: i + 1,
           character: (m.index ?? 0) + 1,
           preview: lines[i].trim(),
+          content
         });
         if (firstOnly) return hits;
       }
