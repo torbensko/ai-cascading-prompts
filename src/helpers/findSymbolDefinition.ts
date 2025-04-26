@@ -2,7 +2,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-export interface DefinitionHit {
+export interface SymbolDefinition {
   /** interface | class | enum | type | const | let | var | struct … */
   keyword: string;
   fileName: string;      // absolute path
@@ -27,7 +27,7 @@ export interface FindOptions {
 export async function findSymbolDefinition(
   symbol: string,
   opts: FindOptions = {},
-): Promise<DefinitionHit[] | null> {
+): Promise<SymbolDefinition[] | null> {
   const {
     rootDir = process.cwd(),
     exts = [
@@ -59,7 +59,7 @@ export async function findSymbolDefinition(
     "i",
   );
 
-  const hits: DefinitionHit[] = [];
+  const hits: SymbolDefinition[] = [];
 
   /* -------------------------------------------------- */
   /* 1. Recursively gather file paths                   */
