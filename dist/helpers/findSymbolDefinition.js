@@ -62,10 +62,11 @@ async function findSymbolDefinition(symbol, opts = {}) {
             if (m) {
                 hits.push({
                     keyword: m[0].split(/\s+/)[0],
-                    fileName: file,
+                    filePath: file,
                     line: i + 1,
                     character: (m.index ?? 0) + 1,
                     preview: lines[i].trim(),
+                    content
                 });
                 if (firstOnly)
                     return hits;
