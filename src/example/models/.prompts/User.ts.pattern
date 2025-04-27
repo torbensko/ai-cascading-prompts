@@ -1,0 +1,5 @@
+Create a User model/DTO with the fields:
+- name: string
+- dob: string (YYYY-MM-DD)
+- createdAt: Date
+- updatedAt: Date

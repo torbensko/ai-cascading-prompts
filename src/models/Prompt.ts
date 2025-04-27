@@ -1,9 +1,11 @@
 import * as path from "node:path";
+import * as fs from "node:fs/promises";
 import { SymbolDefinition } from "../helpers/findSymbolDefinition";
 import { PromptPattern } from "../helpers/loadPromptPatterns";
 import { PackageJson } from "../helpers/getPackageDependencies";
 import { packageDependenciesToString } from "../helpers/packageDependenciesToString";
 import { Preamble } from "../helpers/splitPreamble";
+import { sendPromptToOpenAI } from "../helpers/sendPromptToOpenAI";
 
 export class Prompt {
   private patterns: PromptPattern[] = [];
@@ -16,7 +18,7 @@ export class Prompt {
     public readonly targetPath: string,
     public readonly rootDir: string,
     public readonly symbols: SymbolDefinition[] = [],
-    private readonly preamble: Preamble = {},
+    readonly preamble: Preamble = {},
   ) { }
 
   /* ------------------------- mutators ----------------------------------- */
@@ -96,9 +98,29 @@ export class Prompt {
       );
     }
 
+    parts.push(
+      "## Output",
+      "The output should only include the code such that the result could be passed to the JSON.parse function. No other text should be included.",
+      "Do not include any example usage in the output."
+    )
+
     return parts.filter(Boolean).join("\n").trimEnd().replace(
       /(?<!\n)\n(?=##\s)/g,
       '\n\n'
     );
+  }
+
+  /**
+   * Calls OpenAI with the full prompt text, then writes the assistant’s reply
+   * to `this.targetPath`, creating any missing folders along the way.
+   */
+  async generateFile(): Promise<void> {
+    const completion = await sendPromptToOpenAI(this);
+    const content =
+      completion.choices?.[0]?.message?.content?.trimStart() ?? "";
+
+    // Ensure parent folders exist, then write.
+    await fs.mkdir(path.dirname(this.targetPath), { recursive: true });
+    await fs.writeFile(this.targetPath, content, "utf8");
   }
 }
