@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const class_validator_1 = require("class-validator");
-// User model represents the application-level User object
+// User model class
 class User {
     constructor(dto) {
         this.id = dto.id;
@@ -18,7 +18,7 @@ class User {
         this.updatedAt = new Date(dto.updatedAt);
         this.validate();
     }
-    // Converts the User model back to the UserDTO
+    // Convert model to DTO
     toDTO() {
         return {
             id: this.id,
@@ -28,7 +28,7 @@ class User {
             updatedAt: this.updatedAt.toISOString(),
         };
     }
-    // Validates the User model data
+    // Validate model fields
     validate() {
         const errors = (0, class_validator_1.validateSync)(this);
         if (errors.length > 0) {
@@ -44,11 +44,11 @@ __decorate([
     (0, class_validator_1.IsString)()
 ], User.prototype, "name", void 0);
 __decorate([
-    (0, class_validator_1.IsDateString)({ strict: true })
+    (0, class_validator_1.IsISO8601)()
 ], User.prototype, "dob", void 0);
 __decorate([
-    (0, class_validator_1.IsDateString)({ strict: true })
+    (0, class_validator_1.IsDate)()
 ], User.prototype, "createdAt", void 0);
 __decorate([
-    (0, class_validator_1.IsDateString)({ strict: true })
+    (0, class_validator_1.IsDate)()
 ], User.prototype, "updatedAt", void 0);

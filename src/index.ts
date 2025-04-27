@@ -5,7 +5,7 @@ import { listCodebaseFiles } from "./helpers/listCodebaseFiles";
 import { loadPrompt } from "./helpers/loadPrompt";
 import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
 
-const baseDir = "./src/example";
+const baseDir = "./src";
 
 (async () => {
   const newPrompts = await findAllNewPromptFiles(baseDir);
@@ -21,7 +21,7 @@ const baseDir = "./src/example";
       prompt.updatePatterns(getMatchingPatterns(patterns, prompt.targetPath));
       prompt.updateDependencies(dependencies);
       prompt.updateCodebase(codeFiles);
-      await prompt.generateFile();
+      await prompt.generateFile(true);
     } catch (error) {
       // will throw when a symbol is not found
       console.error(`Error loading prompt from ${promptFile.promptPath}:`, error);

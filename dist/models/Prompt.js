@@ -106,18 +106,26 @@ class Prompt {
      * Calls OpenAI with the full prompt text, then writes the assistant’s reply
      * to `this.targetPath`, creating any missing folders along the way.
      */
-    async generateFile() {
+    async generateFile(writePromptToFile = false) {
         let wroteFile = false;
         let attempts = 0;
         do {
             attempts++;
             try {
-                const completion = await (0, sendPromptToOpenAI_1.sendPromptToOpenAI)(this);
+                // check if there is a model specified in the preamble
+                const promptSpecificModel = this.getPreamble().model?.trim();
+                const fullPrompt = this.generateFullPrompt();
+                const completion = await (0, sendPromptToOpenAI_1.sendPromptToOpenAI)(fullPrompt, promptSpecificModel);
                 const content = completion.choices?.[0]?.message?.content?.trimStart() ?? "";
                 const codeBlock = (0, extractCodeFromGptResponse_1.extractCodeFromGptResponse)(content);
                 // Ensure parent folders exist, then write.
                 await fs.mkdir(path.dirname(this.targetPath), { recursive: true });
                 await fs.writeFile(this.targetPath, codeBlock, "utf8");
+                if (writePromptToFile) {
+                    const promptFilePath = `${this.targetPath}.fullPrompt`;
+                    console.log(`Writing prompt to ${promptFilePath}`);
+                    await fs.writeFile(promptFilePath, fullPrompt, "utf8");
+                }
                 wroteFile = true;
             }
             catch (error) {

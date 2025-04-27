@@ -18,21 +18,19 @@ const openai = new OpenAI({ apiKey });
 /* ------------------------------------------------------------- */
 /* 2.  Chat completion helper                                    */
 /* ------------------------------------------------------------- */
-export async function sendPromptToOpenAI(prompt: Prompt) {
+export async function sendPromptToOpenAI(prompt: string, promptModel?: string) {
   /* 2-a ▸ hierarchy for choosing the model
      ───────────────────────────────────────
         1.  model: …           (in the pre-amble)
         2.  $OPENAI_GPT_MODEL_DEFAULT
         3.  "gpt-4o-mini"      (hard fallback)                      */
   const model =
-    prompt.getPreamble().model?.trim() ||
+    promptModel ||
     process.env.OPENAI_GPT_MODEL_DEFAULT ||
     "gpt-4o-mini";
 
-  const fullPrompt = prompt.generateFullPrompt();
-
   return await openai.chat.completions.create({
     model,
-    messages: [{ role: "user", content: fullPrompt }],
+    messages: [{ role: "user", content: prompt }],
   });
 }
