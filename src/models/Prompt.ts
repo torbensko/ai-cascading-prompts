@@ -8,14 +8,18 @@ import { Preamble } from "../helpers/splitPreamble";
 export class Prompt {
   private patterns: PromptPattern[] = [];
   private dependencies: PackageJson | null = null;
+  private codebaseFiles: string[] = [];
 
   constructor(
     public readonly basePrompt: string,
     public readonly promptPath: string,
     public readonly targetPath: string,
+    public readonly rootDir: string,
     public readonly symbols: SymbolDefinition[] = [],
-    private readonly preamble: Preamble = {},      // ← key/value map
+    private readonly preamble: Preamble = {},
   ) { }
+
+  /* ------------------------- mutators ----------------------------------- */
 
   updatePatterns(patterns: PromptPattern[]): this {
     this.patterns = patterns;
@@ -27,48 +31,74 @@ export class Prompt {
     return this;
   }
 
-  /** Serialise the whole thing back into a single prompt string. */
+  /** Inject a listing of files present in the repository / src dir. */
+  updateCodebase(files: string[]): this {
+    this.codebaseFiles = files;
+    return this;
+  }
+
+  /* ------------------------- assembler ---------------------------------- */
+
   generateFullPrompt(): string {
     const parts: string[] = [];
 
-    /* 2️⃣  main body */
-    parts.push(this.basePrompt.trim() + "\n");
+    /* 0️⃣  main prompt text */
+    parts.push(this.basePrompt.trim());
 
-    /* 1️⃣  patterns */
+    /* 1️⃣  pattern blocks */
     if (this.patterns.length) {
       parts.push(this.patterns.map((p) => p.content.trim()).join("\n"));
     }
+    const outputPath = path.relative(
+      this.rootDir,
+      this.targetPath,
+    ).replace(/\\/g, "/");
 
-    /* 3️⃣  symbol snippets */
+    parts.push(`The resulting code will be saved to: ${outputPath}`);
+
+    /* 2️⃣  related symbol snippets */
     if (this.symbols.length) {
-      const symText = this.symbols
-        .map(
-          (s) =>
-            [
-              `Contents of ${s.filePath}:`,
-              "```" + path.extname(s.filePath).slice(1),
-              s.content,
-              "```",
-            ].join("\n"),
-        )
-        .join("\n\n") + "\n";
+      const symText =
+        this.symbols
+          .map(
+            (s) =>
+              [
+                `\nContents of ${s.filePath}:`,
+                "```" + path.extname(s.filePath).slice(1),
+                s.content,
+                "```",
+              ].join("\n"),
+          )
+          .join("\n\n") + "\n";
 
       parts.push(
-        "\n## Related symbols",
-        "Below provides some of the existing code referenced in the prompt.\n",
+        "## Related symbols",
+        "Below provides some of the existing code referenced in the prompt.",
         symText,
       );
     }
 
-    /* 4️⃣  dependencies */
+    /* 3️⃣  code-base listing */
+    if (this.codebaseFiles.length) {
+      parts.push(
+        "## Codebase",
+        "For extra context, below is a listing of the files available in the codebase:",
+        this.codebaseFiles.map(path => `- ${path}`).join("\n"),
+      );
+    }
+
+    /* 4️⃣  package dependencies */
     if (this.dependencies) {
       parts.push(
-        "\n## Package dependencies",
-        "Existing dependencies should be used where possible.",
+        "## Package dependencies",
+        "For extra context, below provides a list of the current project dependencies. Where possible, existing dependencies should be used.",
         packageDependenciesToString(this.dependencies),
       );
     }
 
-    return parts.filter(Boolean).join("\n").trimEnd();
+    return parts.filter(Boolean).join("\n").trimEnd().replace(
+      /(?<!\n)\n(?=##\s)/g,
+      '\n\n'
+    );
   }
 }

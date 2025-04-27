@@ -28,6 +28,7 @@ export async function loadPrompt(
     cleanedPrompt,
     file.promptPath,
     file.targetPath,
+    file.rootDir,
     defs.filter(Boolean) as SymbolDefinition[],
     preamble,
   );

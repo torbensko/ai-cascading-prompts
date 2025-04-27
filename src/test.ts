@@ -3,6 +3,7 @@ import { findAllNewPromptFiles } from "./helpers/findAllNewPromptFiles";
 import { findSymbolDefinition } from "./helpers/findSymbolDefinition";
 import { getMatchingPatterns } from "./helpers/getMatchingPatterns";
 import { getPackageDependencies } from "./helpers/getPackageDependencies";
+import { listCodebaseFiles } from "./helpers/listCodebaseFiles";
 import { loadPrompt } from "./helpers/loadPrompt";
 import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
 import { packageDependenciesToString } from "./helpers/packageDependenciesToString";
@@ -20,16 +21,23 @@ import { packageDependenciesToString } from "./helpers/packageDependenciesToStri
   console.log("Dependencies:");
   console.log(packageDependenciesToString(dependencies));
 
+  // … after you’ve constructed the Prompt instance via `loadPrompt`
+  const codeFiles = await listCodebaseFiles(`${process.cwd()}/src`, { exts: [".ts", ".tsx"] });
+
+
   for (const promptFile of newPrompts) {
     // Find the symbol definition for each new prompt
     try {
-      const promptDetails = await loadPrompt(promptFile, "./example");
-      promptDetails.updatePatterns(getMatchingPatterns(patterns, promptDetails.targetPath));
-      promptDetails.updateDependencies(dependencies);
+      const prompt = await loadPrompt(promptFile, "./example");
 
-      console.log(`Producing: ${promptDetails.targetPath}`);
+      // add contextural information
+      prompt.updatePatterns(getMatchingPatterns(patterns, prompt.targetPath));
+      prompt.updateDependencies(dependencies);
+      prompt.updateCodebase(codeFiles);
+
+      console.log(`Producing: ${prompt.targetPath}\n`);
       console.log(`---- PROMPT ----`);
-      console.log(promptDetails.generateFullPrompt());
+      console.log(prompt.generateFullPrompt());
       console.log(`----`);
     } catch (error) {
       // will throw when a symbol is not found

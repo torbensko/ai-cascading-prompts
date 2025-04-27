@@ -3,20 +3,19 @@ import * as path from "node:path";
 import { mapPromptToTarget } from "./mapPromptToTarget";
 
 export interface PromptFile {
-  promptPath: string;
-  targetPath: string;
+  promptPath: string;   // absolute *.prompt
+  targetPath: string;   // absolute generated file
+  rootDir: string;      // absolute root dir for this prompt
 }
 
 /**
- * Recursively scan `rootDir`, returning every *.prompt file
- * whose generated output file does **not** yet exist.
- *
- * @param rootDir – directory to start searching from
- * @returns absolute paths of “new” prompt files
+ * Recursively walk `rootDir`, returning every *.prompt file whose companion
+ * generated file is missing.
  */
 export async function findAllNewPromptFiles(
-  rootDir: string
+  rootDir: string,
 ): Promise<PromptFile[]> {
+  const absRoot = path.resolve(rootDir);     // 👉 guarantee absolute form
   const results: PromptFile[] = [];
 
   async function walk(current: string): Promise<void> {
@@ -25,34 +24,36 @@ export async function findAllNewPromptFiles(
     for (const entry of entries) {
       const resolved = path.join(current, entry.name);
 
-      // Fast-path: if we’re in a ".prompts" directory, only look at files.
       if (entry.isDirectory()) {
         if (entry.name === ".prompts") {
           const promptFiles = await fs.readdir(resolved, {
             withFileTypes: true,
           });
+
           for (const pf of promptFiles) {
             if (pf.isFile() && pf.name.endsWith(".prompt")) {
-              const promptPath = path.join(resolved, pf.name);
-              const targetPath = mapPromptToTarget(promptPath);
+              const promptPath = path.join(resolved, pf.name); // absolute
+              const targetPath = mapPromptToTarget(promptPath); // absolute
+
               try {
-                await fs.access(targetPath);      // exists?
+                await fs.access(targetPath); // generated file exists
               } catch {
                 results.push({
                   promptPath,
                   targetPath,
+                  rootDir: absRoot,          // always absolute
                 });
               }
             }
           }
-          // No need to recurse inside “.prompts”
+          // no need to descend further inside ".prompts"
         } else {
-          await walk(resolved);
+          await walk(resolved);              // recurse
         }
       }
     }
   }
 
-  await walk(path.resolve(rootDir));
+  await walk(absRoot);
   return results;
 }

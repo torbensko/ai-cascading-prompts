@@ -9,12 +9,12 @@ export function packageDependenciesToString(packageJson: PackageJson): string {
     isDev: boolean = false,
   ) => {
     if (!deps || Object.keys(deps).length === 0) return;
-    output += `The project uses the following ${isDev ? "dev " : ""}packages:\n`;
+    output += isDev ? `Dev packages:` : `Packages:`;
+    output += "\n";
     for (const [name, version] of Object.entries(deps)) {
       // console.log(`- ${name} (${version})`);
       output += `- ${name} (${version})\n`;
     }
-    output += "\n";
   };
 
   convertSection(packageJson.dependencies);
