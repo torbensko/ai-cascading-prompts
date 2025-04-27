@@ -6,6 +6,7 @@ import { PackageJson } from "../helpers/getPackageDependencies";
 import { packageDependenciesToString } from "../helpers/packageDependenciesToString";
 import { Preamble } from "../helpers/splitPreamble";
 import { sendPromptToOpenAI } from "../helpers/sendPromptToOpenAI";
+import { extractCodeFromGptResponse } from "../helpers/extractCodeFromGptResponse";
 
 export class Prompt {
   private patterns: PromptPattern[] = [];
@@ -119,12 +120,23 @@ export class Prompt {
    * to `this.targetPath`, creating any missing folders along the way.
    */
   async generateFile(): Promise<void> {
-    const completion = await sendPromptToOpenAI(this);
-    const content =
-      completion.choices?.[0]?.message?.content?.trimStart() ?? "";
+    let wroteFile = false;
+    let attempts = 0;
+    do {
+      attempts++;
+      try {
+        const completion = await sendPromptToOpenAI(this);
+        const content =
+          completion.choices?.[0]?.message?.content?.trimStart() ?? "";
+        const codeBlock = extractCodeFromGptResponse(content);
 
-    // Ensure parent folders exist, then write.
-    await fs.mkdir(path.dirname(this.targetPath), { recursive: true });
-    await fs.writeFile(this.targetPath, content, "utf8");
+        // Ensure parent folders exist, then write.
+        await fs.mkdir(path.dirname(this.targetPath), { recursive: true });
+        await fs.writeFile(this.targetPath, codeBlock, "utf8");
+        wroteFile = true;
+      } catch (error) {
+        console.warn(`Error generating file for prompt ${this.promptPath}: ${error}`)
+      }
+    } while (!wroteFile && attempts < 3)
   }
 }

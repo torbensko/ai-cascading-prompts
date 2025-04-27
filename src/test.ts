@@ -39,7 +39,8 @@ const baseDir = "./src/example";
       console.log(`---- PROMPT ----`);
       console.log(prompt.generateFullPrompt());
       console.log(`----`);
-      // prompt.generateFile();
+
+      await prompt.generateFile();
     } catch (error) {
       // will throw when a symbol is not found
       console.error(`Error loading prompt from ${promptFile.promptPath}:`, error);
