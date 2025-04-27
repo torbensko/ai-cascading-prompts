@@ -3,9 +3,9 @@ import { SymbolDefinition } from "../helpers/findSymbolDefinition";
 import { PromptPattern } from "../helpers/loadPromptPatterns";
 import { PackageJson } from "../helpers/getPackageDependencies";
 import { packageDependenciesToString } from "../helpers/packageDependenciesToString";
+import { Preamble } from "../helpers/splitPreamble";
 
 export class Prompt {
-  /** `patterns` are prepended (in order) when `generateFullPrompt()` runs. */
   private patterns: PromptPattern[] = [];
   private dependencies: PackageJson | null = null;
 
@@ -14,58 +14,61 @@ export class Prompt {
     public readonly promptPath: string,
     public readonly targetPath: string,
     public readonly symbols: SymbolDefinition[] = [],
+    private readonly preamble: Preamble = {},      // ← key/value map
   ) { }
 
-  /** Overwrite any existing list of patterns (return `this` for chaining) */
   updatePatterns(patterns: PromptPattern[]): this {
     this.patterns = patterns;
     return this;
   }
 
-
-  updateDependencies(dependencies: PackageJson) {
-    this.dependencies = dependencies;
+  updateDependencies(deps: PackageJson): this {
+    this.dependencies = deps;
     return this;
   }
 
-  /** Combine patterns + prompt + symbol meta into a single string. */
+  /** Serialise the whole thing back into a single prompt string. */
   generateFullPrompt(): string {
-    let output = ""
+    const parts: string[] = [];
 
-    /* 1️⃣  Pattern blocks (if any) */
-    output += this.patterns.map((p) => p.content.trim()).join("\n");
-    output += "\n\n";
-    output += this.basePrompt.trim();
-    output += "\n\n";
+    /* 2️⃣  main body */
+    parts.push(this.basePrompt.trim() + "\n");
 
-    if (this.symbols.length > 0) {
-      output += "## Related symbols\n";
-      output += "Below provides some of the existing code referenced in the prompt.\n\n";
+    /* 1️⃣  patterns */
+    if (this.patterns.length) {
+      parts.push(this.patterns.map((p) => p.content.trim()).join("\n"));
+    }
 
-      /* 2️⃣  Symbol information (simple, language-agnostic) */
-      output += this.symbols
+    /* 3️⃣  symbol snippets */
+    if (this.symbols.length) {
+      const symText = this.symbols
         .map(
           (s) =>
             [
               `Contents of ${s.filePath}:`,
-              `\`\`\`${path.extname(s.filePath).slice(1)}`,
+              "```" + path.extname(s.filePath).slice(1),
               s.content,
               "```",
             ].join("\n"),
         )
-        .join("\n\n");
-      output += "\n\n";
+        .join("\n\n") + "\n";
+
+      parts.push(
+        "\n## Related symbols",
+        "Below provides some of the existing code referenced in the prompt.\n",
+        symText,
+      );
     }
 
+    /* 4️⃣  dependencies */
     if (this.dependencies) {
-      /* 3️⃣  Package dependencies (if any) */
-      const packageDependencies = packageDependenciesToString(this.dependencies);
-
-      output += "## Package dependencies\n";
-      output += packageDependencies;
-      output += "Where possible, existing dependencies should be used.\n";
+      parts.push(
+        "\n## Package dependencies",
+        "Existing dependencies should be used where possible.",
+        packageDependenciesToString(this.dependencies),
+      );
     }
 
-    return output;
+    return parts.filter(Boolean).join("\n").trimEnd();
   }
 }
