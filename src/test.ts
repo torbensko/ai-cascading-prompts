@@ -2,8 +2,10 @@ import { extractSymbolsFromPrompt } from "./helpers/extractSymbolsFromPrompt";
 import { findAllNewPromptFiles } from "./helpers/findAllNewPromptFiles";
 import { findSymbolDefinition } from "./helpers/findSymbolDefinition";
 import { getMatchingPatterns } from "./helpers/getMatchingPatterns";
+import { getPackageDependencies } from "./helpers/getPackageDependencies";
 import { loadPrompt } from "./helpers/loadPrompt";
 import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
+import { packageDependenciesToString } from "./helpers/packageDependenciesToString";
 
 (async () => {
   const newPrompts = await findAllNewPromptFiles("./example");
@@ -14,11 +16,16 @@ import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
   console.log("All patterns:");
   console.log(patterns);
 
+  const dependencies = await getPackageDependencies();
+  console.log("Dependencies:");
+  console.log(packageDependenciesToString(dependencies));
+
   for (const promptFile of newPrompts) {
     // Find the symbol definition for each new prompt
     try {
       const promptDetails = await loadPrompt(promptFile, "./example");
       promptDetails.updatePatterns(getMatchingPatterns(patterns, promptDetails.targetPath));
+      promptDetails.updateDependencies(dependencies);
 
       console.log(`Producing: ${promptDetails.targetPath}`);
       console.log(`---- PROMPT ----`);
