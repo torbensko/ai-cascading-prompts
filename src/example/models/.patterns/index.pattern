@@ -1,8 +1,10 @@
-For files in the model folder it should export a DTO interface and a model class.
+All models should include a DTO interface and a model class.
+
 DTOs should follow these rules:
 - DTOs are interfaces.
 - DTOs should only include primatives, primative arrays or other DTOs
 - Timestamps should be represented as an ISO string.
+
 Models should follow these rules:
 - Models should be initialised using a DTO object. Any sub-DTOs should be converted to their respective models.
 - Models should include a `.toDTO()` class that converts back to the DTO interface.

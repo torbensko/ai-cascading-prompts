@@ -1,2 +1,3 @@
-Design rules:
+General code rules:
 - No default exports
+- Ensure all exports have a comment

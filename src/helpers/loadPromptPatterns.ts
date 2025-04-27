@@ -55,7 +55,6 @@ export async function loadPromptPatterns(
 
         // Remove “…/.patterns/” from the path
         const matchPath = path.dirname(path.dirname(fullPath));
-        console.log("reading file: ", fullPath);
         const content = await fs.readFile(fullPath, "utf8");
         results.push({ fullPath, matchPath, content });
       })

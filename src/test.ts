@@ -7,28 +7,28 @@ import { listCodebaseFiles } from "./helpers/listCodebaseFiles";
 import { loadPrompt } from "./helpers/loadPrompt";
 import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
 import { packageDependenciesToString } from "./helpers/packageDependenciesToString";
-import { sendPromptToOpenAI } from "./helpers/sendPromptToOpenAI";
+
+const baseDir = "./src/example";
 
 (async () => {
-  const newPrompts = await findAllNewPromptFiles("./src/example");
-  console.log("New prompt files:");
-  console.log(newPrompts);
-
-  const patterns = await loadPromptPatterns("./src/example");
-  console.log("All patterns:");
-  console.log(patterns);
-
+  const newPrompts = await findAllNewPromptFiles(baseDir);
+  const patterns = await loadPromptPatterns(baseDir);
   const dependencies = await getPackageDependencies();
-  console.log("Dependencies:");
-  console.log(packageDependenciesToString(dependencies));
+
+  // console.log("New prompt files:");
+  // console.log(newPrompts);
+  // console.log("All patterns:");
+  // console.log(patterns);
+  // console.log("Dependencies:");
+  // console.log(packageDependenciesToString(dependencies));
 
   // … after you’ve constructed the Prompt instance via `loadPrompt`
-  const codeFiles = await listCodebaseFiles(`${process.cwd()}/src/example`, { exts: [".ts", ".tsx"] });
+  const codeFiles = await listCodebaseFiles(baseDir, { exts: [".ts", ".tsx"] });
 
   for (const promptFile of newPrompts) {
     // Find the symbol definition for each new prompt
     try {
-      const prompt = await loadPrompt(promptFile, "./src/example");
+      const prompt = await loadPrompt(promptFile, baseDir);
 
       // add contextural information
       prompt.updatePatterns(getMatchingPatterns(patterns, prompt.targetPath));
@@ -39,7 +39,7 @@ import { sendPromptToOpenAI } from "./helpers/sendPromptToOpenAI";
       console.log(`---- PROMPT ----`);
       console.log(prompt.generateFullPrompt());
       console.log(`----`);
-      prompt.generateFile();
+      // prompt.generateFile();
     } catch (error) {
       // will throw when a symbol is not found
       console.error(`Error loading prompt from ${promptFile.promptPath}:`, error);

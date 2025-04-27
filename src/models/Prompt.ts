@@ -39,17 +39,21 @@ export class Prompt {
     return this;
   }
 
+  getPreamble(): Preamble {
+    return this.preamble;
+  }
+
   /* ------------------------- assembler ---------------------------------- */
 
   generateFullPrompt(): string {
     const parts: string[] = [];
 
     /* 0️⃣  main prompt text */
-    parts.push(this.basePrompt.trim());
+    parts.push(this.basePrompt.trim() + "\n");
 
     /* 1️⃣  pattern blocks */
     if (this.patterns.length) {
-      parts.push(this.patterns.map((p) => p.content.trim()).join("\n"));
+      parts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
     }
     const outputPath = path.relative(
       this.rootDir,

@@ -1,5 +1,6 @@
 Create a User model/DTO with the fields:
+- id: UUID
 - name: string
 - dob: string (YYYY-MM-DD)
-- createdAt: Date
-- updatedAt: Date
+- createdAt: string/Date
+- updatedAt: string/Date

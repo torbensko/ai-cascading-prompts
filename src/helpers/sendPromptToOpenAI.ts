@@ -1,33 +1,38 @@
 import OpenAI from "openai";
+import "dotenv/config";
+
 import { Prompt } from "../models/Prompt";
 
-const openai = new OpenAI();
+/* ------------------------------------------------------------- */
+/* 1.  API key – pulled from $OPENAI_API_KEY                     */
+/* ------------------------------------------------------------- */
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  throw new Error(
+    "Missing OPENAI_API_KEY – set it in your environment or .env file",
+  );
+}
 
-/**
- * Send the fully-assembled prompt to OpenAI.
- *
- * • If the prompt’s pre-amble contains a `model:` key (e.g. `model: 3o`)
- *   that model name is used.  
- * • Otherwise `gpt-4o-mini` is the default.
- */
-export async function sendPromptToOpenAI(
-  prompt: Prompt,
-): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-  // extractor helper – you can also expose a getter on Prompt instead
-  const modelFromPreamble = (prompt as any).preamble?.model as string | undefined;
-  const model = modelFromPreamble?.trim() || "gpt-4o";
+const openai = new OpenAI({ apiKey });
+
+/* ------------------------------------------------------------- */
+/* 2.  Chat completion helper                                    */
+/* ------------------------------------------------------------- */
+export async function sendPromptToOpenAI(prompt: Prompt) {
+  /* 2-a ▸ hierarchy for choosing the model
+     ───────────────────────────────────────
+        1.  model: …           (in the pre-amble)
+        2.  $OPENAI_GPT_MODEL_DEFAULT
+        3.  "gpt-4o-mini"      (hard fallback)                      */
+  const model =
+    prompt.getPreamble().model?.trim() ||
+    process.env.OPENAI_GPT_MODEL_DEFAULT ||
+    "gpt-4o-mini";
 
   const fullPrompt = prompt.generateFullPrompt();
 
-  const completion = await openai.chat.completions.create({
+  return await openai.chat.completions.create({
     model,
-    messages: [
-      {
-        role: "user",
-        content: fullPrompt,
-      },
-    ],
+    messages: [{ role: "user", content: fullPrompt }],
   });
-
-  return completion;
 }
