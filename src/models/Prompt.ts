@@ -10,11 +10,13 @@ import { extractCodeFromGptResponse } from "../helpers/extractCodeFromGptRespons
 import { extractSymbolsFromPrompt } from "../helpers/extractSymbolsFromPrompt";
 import { PromptFile } from "../helpers/findAllNewPromptFiles";
 import { readFile } from "node:fs/promises";
+import { PathAlias } from "../helpers/getPathAliases";
 
 export class Prompt {
   private patterns: PromptPattern[] = [];
   private dependencies: PackageJson | null = null;
   private codebaseFiles: string[] = [];
+  private aliases: PathAlias[] = [];
 
   constructor(
     public readonly basePrompt: string,
@@ -42,6 +44,11 @@ export class Prompt {
     return this;
   }
 
+  updateAliases(importAliases: PathAlias[]) {
+    this.aliases = importAliases;
+    return this;
+  }
+
   getPreamble(): Preamble {
     return this.preamble;
   }
@@ -56,10 +63,10 @@ export class Prompt {
     ).replace(/\\/g, "/");
 
     const promptParts: string[] = []
-    /* 0️⃣  main prompt text */
+    /* main prompt text */
     promptParts.push(this.basePrompt.trim() + "\n");
 
-    /* 1️⃣  pattern blocks */
+    /* pattern blocks */
     if (this.patterns.length) {
       promptParts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
     }
@@ -87,7 +94,7 @@ export class Prompt {
       `The resulting code will be saved to: ${outputPath}`
     ];
 
-    /* 2️⃣  related symbol snippets */
+    /* related symbol snippets */
     if (symbolDefs.length) {
       const symText =
         symbolDefs
@@ -109,7 +116,7 @@ export class Prompt {
       );
     }
 
-    /* 3️⃣  code-base listing */
+    /* code-base listing */
     if (this.codebaseFiles.length) {
       parts.push(
         "## Codebase",
@@ -118,7 +125,16 @@ export class Prompt {
       );
     }
 
-    /* 4️⃣  package dependencies */
+    /* import aliases */
+    if (this.aliases.length) {
+      parts.push(
+        "## Import aliases",
+        "For extra context, below is a listing of the import aliases available in the codebase:",
+        this.aliases.map(alias => `- ${alias.alias} -> ${alias.targets.join(", ")}`).join("\n"),
+      );
+    }
+
+    /* package dependencies */
     if (this.dependencies) {
       parts.push(
         "## Package dependencies",

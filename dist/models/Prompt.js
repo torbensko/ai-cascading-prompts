@@ -53,6 +53,7 @@ class Prompt {
         this.patterns = [];
         this.dependencies = null;
         this.codebaseFiles = [];
+        this.aliases = [];
     }
     /* ------------------------- mutators ----------------------------------- */
     updatePatterns(patterns) {
@@ -68,6 +69,10 @@ class Prompt {
         this.codebaseFiles = files;
         return this;
     }
+    updateAliases(importAliases) {
+        this.aliases = importAliases;
+        return this;
+    }
     getPreamble() {
         return this.preamble;
     }
@@ -75,9 +80,9 @@ class Prompt {
     async generateFullPrompt() {
         const outputPath = path.relative(this.rootDir, this.targetPath).replace(/\\/g, "/");
         const promptParts = [];
-        /* 0️⃣  main prompt text */
+        /* main prompt text */
         promptParts.push(this.basePrompt.trim() + "\n");
-        /* 1️⃣  pattern blocks */
+        /* pattern blocks */
         if (this.patterns.length) {
             promptParts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
         }
@@ -99,7 +104,7 @@ class Prompt {
             cleanedPrompt,
             `The resulting code will be saved to: ${outputPath}`
         ];
-        /* 2️⃣  related symbol snippets */
+        /* related symbol snippets */
         if (symbolDefs.length) {
             const symText = symbolDefs
                 .map((s) => [
@@ -111,11 +116,15 @@ class Prompt {
                 .join("\n\n") + "\n";
             parts.push("## Related symbols", "Below provides some of the existing code referenced in the prompt.", symText);
         }
-        /* 3️⃣  code-base listing */
+        /* code-base listing */
         if (this.codebaseFiles.length) {
             parts.push("## Codebase", "For extra context, below is a listing of the files available in the codebase:", this.codebaseFiles.map(path => `- ${path}`).join("\n"));
         }
-        /* 4️⃣  package dependencies */
+        /* import aliases */
+        if (this.aliases.length) {
+            parts.push("## Import aliases", "For extra context, below is a listing of the import aliases available in the codebase:", this.aliases.map(alias => `- ${alias.alias} -> ${alias.targets.join(", ")}`).join("\n"));
+        }
+        /* package dependencies */
         if (this.dependencies) {
             parts.push("## Package dependencies", "For extra context, below provides a list of the current project dependencies. Where possible, existing dependencies should be used.", (0, packageDependenciesToString_1.packageDependenciesToString)(this.dependencies));
         }

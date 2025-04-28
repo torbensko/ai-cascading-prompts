@@ -2,6 +2,7 @@
 import { findAllNewPromptFiles } from "./helpers/findAllNewPromptFiles";
 import { getMatchingPatterns } from "./helpers/getMatchingPatterns";
 import { getPackageDependencies } from "./helpers/getPackageDependencies";
+import { getPathAliases } from "./helpers/getPathAliases";
 import { listCodebaseFiles } from "./helpers/listCodebaseFiles";
 import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
 import { Prompt } from "./models/Prompt";
@@ -12,6 +13,7 @@ const baseDir = "./src/example";
   const newPrompts = await findAllNewPromptFiles(baseDir);
   const patterns = await loadPromptPatterns(baseDir);
   const dependencies = await getPackageDependencies();
+  const importAliases = await getPathAliases();
 
   // console.log("New prompt files:");
   // console.log(newPrompts);
@@ -19,6 +21,8 @@ const baseDir = "./src/example";
   // console.log(patterns);
   // console.log("Dependencies:");
   // console.log(packageDependenciesToString(dependencies));
+  console.log("Import aliases:");
+  console.log(importAliases);
 
   // … after you’ve constructed the Prompt instance via `loadPrompt`
   const codeFiles = await listCodebaseFiles(baseDir, { exts: [".ts", ".tsx"] });
@@ -32,6 +36,7 @@ const baseDir = "./src/example";
       prompt.updatePatterns(getMatchingPatterns(patterns, prompt.targetPath));
       prompt.updateDependencies(dependencies);
       prompt.updateCodebase(codeFiles);
+      prompt.updateAliases(importAliases);
 
       console.log(`Producing: ${prompt.targetPath}\n`);
       const { fullPrompt, missingSymbols } = await prompt.generateFullPrompt();

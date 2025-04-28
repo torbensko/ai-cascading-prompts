@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const findAllNewPromptFiles_1 = require("./helpers/findAllNewPromptFiles");
+const getPathAliases_1 = require("./helpers/getPathAliases");
 const getMatchingPatterns_1 = require("./helpers/getMatchingPatterns");
 const getPackageDependencies_1 = require("./helpers/getPackageDependencies");
 const listCodebaseFiles_1 = require("./helpers/listCodebaseFiles");
@@ -15,6 +16,7 @@ const baseDir = "./src";
     // Load some contextural information to help the prompt correctly generate the file
     const dependencies = await (0, getPackageDependencies_1.getPackageDependencies)();
     const codeFiles = await (0, listCodebaseFiles_1.listCodebaseFiles)(baseDir, { exts: [".ts", ".tsx"] });
+    const importAliases = await (0, getPathAliases_1.getPathAliases)();
     // as there can be dependencies between prompts, we keep trying until we have
     // resolved all of them or we are unable to resolve the remaining ones
     let remainingPrompts = [...newPrompts];
@@ -32,6 +34,7 @@ const baseDir = "./src";
                 prompt.updatePatterns(cascadingPatterns);
                 prompt.updateDependencies(dependencies);
                 prompt.updateCodebase(codeFiles);
+                prompt.updateAliases(importAliases);
                 const success = await prompt.generateFile(true);
                 if (success) {
                     remainingPrompts = remainingPrompts.filter(p => p.targetPath !== prompt.targetPath);

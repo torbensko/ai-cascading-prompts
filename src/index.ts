@@ -1,4 +1,5 @@
 import { findAllNewPromptFiles } from "./helpers/findAllNewPromptFiles";
+import { getPathAliases } from "./helpers/getPathAliases";
 import { getMatchingPatterns } from "./helpers/getMatchingPatterns";
 import { getPackageDependencies } from "./helpers/getPackageDependencies";
 import { listCodebaseFiles } from "./helpers/listCodebaseFiles";
@@ -15,6 +16,7 @@ const baseDir = "./src";
   // Load some contextural information to help the prompt correctly generate the file
   const dependencies = await getPackageDependencies();
   const codeFiles = await listCodebaseFiles(baseDir, { exts: [".ts", ".tsx"] });
+  const importAliases = await getPathAliases();
 
   // as there can be dependencies between prompts, we keep trying until we have
   // resolved all of them or we are unable to resolve the remaining ones
@@ -34,6 +36,7 @@ const baseDir = "./src";
         prompt.updatePatterns(cascadingPatterns);
         prompt.updateDependencies(dependencies);
         prompt.updateCodebase(codeFiles);
+        prompt.updateAliases(importAliases);
         const success = await prompt.generateFile(true);
         if (success) {
           remainingPrompts = remainingPrompts.filter(p => p.targetPath !== prompt.targetPath);
