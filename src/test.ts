@@ -45,7 +45,7 @@ const baseDir = "./src/example";
       console.log(`----`);
       console.log(`Missing symbols: ${missingSymbols.join(", ")}`);
 
-      // await prompt.generateFile(true);
+      await prompt.generateFile(true);
     } catch (error) {
       // will throw when a symbol is not found
       console.error(`Error loading prompt from ${promptFile.promptPath}:`, error);
