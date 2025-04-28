@@ -4,8 +4,8 @@ const findAllNewPromptFiles_1 = require("./helpers/findAllNewPromptFiles");
 const getMatchingPatterns_1 = require("./helpers/getMatchingPatterns");
 const getPackageDependencies_1 = require("./helpers/getPackageDependencies");
 const listCodebaseFiles_1 = require("./helpers/listCodebaseFiles");
-const loadPrompt_1 = require("./helpers/loadPrompt");
 const loadPromptPatterns_1 = require("./helpers/loadPromptPatterns");
+const Prompt_1 = require("./models/Prompt");
 const baseDir = "./src/example";
 (async () => {
     const newPrompts = await (0, findAllNewPromptFiles_1.findAllNewPromptFiles)(baseDir);
@@ -22,16 +22,18 @@ const baseDir = "./src/example";
     for (const promptFile of newPrompts) {
         // Find the symbol definition for each new prompt
         try {
-            const prompt = await (0, loadPrompt_1.loadPrompt)(promptFile, baseDir);
+            const prompt = await Prompt_1.Prompt.loadFromFile(promptFile);
             // add contextural information
             prompt.updatePatterns((0, getMatchingPatterns_1.getMatchingPatterns)(patterns, prompt.targetPath));
             prompt.updateDependencies(dependencies);
             prompt.updateCodebase(codeFiles);
             console.log(`Producing: ${prompt.targetPath}\n`);
+            const { fullPrompt, missingSymbols } = await prompt.generateFullPrompt();
             console.log(`---- PROMPT ----`);
-            console.log(prompt.generateFullPrompt());
+            console.log(fullPrompt);
             console.log(`----`);
-            await prompt.generateFile(true);
+            console.log(`Missing symbols: ${missingSymbols.join(", ")}`);
+            // await prompt.generateFile(true);
         }
         catch (error) {
             // will throw when a symbol is not found

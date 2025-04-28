@@ -4,10 +4,12 @@ import { findSymbolDefinition, SymbolDefinition } from "../helpers/findSymbolDef
 import { PromptPattern } from "../helpers/loadPromptPatterns";
 import { PackageJson } from "../helpers/getPackageDependencies";
 import { packageDependenciesToString } from "../helpers/packageDependenciesToString";
-import { Preamble } from "../helpers/splitPreamble";
+import { Preamble, splitPreamble } from "../helpers/splitPreamble";
 import { sendPromptToOpenAI } from "../helpers/sendPromptToOpenAI";
 import { extractCodeFromGptResponse } from "../helpers/extractCodeFromGptResponse";
 import { extractSymbolsFromPrompt } from "../helpers/extractSymbolsFromPrompt";
+import { PromptFile } from "../helpers/findAllNewPromptFiles";
+import { readFile } from "node:fs/promises";
 
 export class Prompt {
   private patterns: PromptPattern[] = [];
@@ -46,7 +48,7 @@ export class Prompt {
 
   /* ------------------------- assembler ---------------------------------- */
 
-  async generateFullPrompt(): Promise<string> {
+  async generateFullPrompt(): Promise<{ fullPrompt: string, missingSymbols: string[] }> {
 
     const outputPath = path.relative(
       this.rootDir,
@@ -79,9 +81,6 @@ export class Prompt {
         }
       })
     );
-
-    // check if any symbols are missing - this might be because the symbol is not defined yet or has been incorrectly referenced
-    if (missingSymbols.length) throw new Error(`Unable to find: ${missingSymbols.join(", ")}`);
 
     const parts: string[] = [
       cleanedPrompt,
@@ -134,35 +133,49 @@ export class Prompt {
       "Do not include any example usage in the output."
     )
 
-    return parts.filter(Boolean).join("\n").trimEnd().replace(
+    const finalPrompt = parts.filter(Boolean).join("\n").trimEnd().replace(
       /(?<!\n)\n(?=##\s)/g,
       '\n\n'
     );
+
+    return {
+      fullPrompt: finalPrompt,
+      missingSymbols,
+    };
   }
 
   /**
    * Calls OpenAI with the full prompt text, then writes the assistant’s reply
    * to `this.targetPath`, creating any missing folders along the way.
    */
-  async generateFile(writePromptToFile: boolean = false): Promise<void> {
+  async generateFile(writePromptToFile: boolean = false): Promise<boolean> {
     let wroteFile = false;
     let attempts = 0;
     do {
       attempts++;
+
+      // check if there is a model specified in the preamble
+      const promptSpecificModel = this.getPreamble().model?.trim()
+      const { fullPrompt, missingSymbols } = await this.generateFullPrompt();
+
+      if (missingSymbols.length) {
+        console.warn(`Missing symbols: ${missingSymbols.join(", ")}`);
+        return false;
+      }
+
+      const completion = await sendPromptToOpenAI(fullPrompt, promptSpecificModel);
+      const content =
+        completion.choices?.[0]?.message?.content?.trimStart() ?? "";
+
       try {
-        // check if there is a model specified in the preamble
-        const promptSpecificModel = this.getPreamble().model?.trim()
-        // can throw if some of the symbols are not found
-        const fullPrompt = await this.generateFullPrompt();
-        const completion = await sendPromptToOpenAI(fullPrompt, promptSpecificModel);
-        const content =
-          completion.choices?.[0]?.message?.content?.trimStart() ?? "";
         // this can throw an error if the response does not follow the expected format
         const codeBlock = extractCodeFromGptResponse(content);
 
         // Ensure parent folders exist, then write.
         await fs.mkdir(path.dirname(this.targetPath), { recursive: true });
         await fs.writeFile(this.targetPath, codeBlock, "utf8");
+
+        // debug to allow the user to see the generated prompt
         if (writePromptToFile) {
           const promptFilePath = `${this.targetPath}.fullPrompt`;
           console.log(`Writing prompt to ${promptFilePath}`);
@@ -173,5 +186,21 @@ export class Prompt {
         console.warn(`Error generating file for prompt ${this.promptPath}: ${error}`)
       }
     } while (!wroteFile && attempts < 3)
+
+    return wroteFile;
+  }
+
+  static async loadFromFile(file: PromptFile): Promise<Prompt> {
+    const fileContents = await readFile(file.promptPath, "utf8");
+    const { preamble, body } = await splitPreamble(fileContents);
+
+    // 4️⃣  class instance
+    return new Prompt(
+      body,
+      file.promptPath,
+      file.targetPath,
+      file.rootDir,
+      preamble,
+    );
   }
 }

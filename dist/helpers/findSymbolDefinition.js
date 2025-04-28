@@ -31,6 +31,7 @@ async function findSymbolDefinition(symbol, opts = {}) {
         "const",
         "let",
         "var",
+        "function",
     ];
     const regex = new RegExp(`\\b(?:${KEYWORDS.join("|")})\\s+${symbol}\\b`, "i");
     const hits = [];

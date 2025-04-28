@@ -1,12 +1,10 @@
-import { extractSymbolsFromPrompt } from "./helpers/extractSymbolsFromPrompt";
+
 import { findAllNewPromptFiles } from "./helpers/findAllNewPromptFiles";
-import { findSymbolDefinition } from "./helpers/findSymbolDefinition";
 import { getMatchingPatterns } from "./helpers/getMatchingPatterns";
 import { getPackageDependencies } from "./helpers/getPackageDependencies";
 import { listCodebaseFiles } from "./helpers/listCodebaseFiles";
-import { loadPrompt } from "./helpers/loadPrompt";
 import { loadPromptPatterns } from "./helpers/loadPromptPatterns";
-import { packageDependenciesToString } from "./helpers/packageDependenciesToString";
+import { Prompt } from "./models/Prompt";
 
 const baseDir = "./src/example";
 
@@ -28,7 +26,7 @@ const baseDir = "./src/example";
   for (const promptFile of newPrompts) {
     // Find the symbol definition for each new prompt
     try {
-      const prompt = await loadPrompt(promptFile, baseDir);
+      const prompt = await Prompt.loadFromFile(promptFile);
 
       // add contextural information
       prompt.updatePatterns(getMatchingPatterns(patterns, prompt.targetPath));
@@ -36,9 +34,11 @@ const baseDir = "./src/example";
       prompt.updateCodebase(codeFiles);
 
       console.log(`Producing: ${prompt.targetPath}\n`);
+      const { fullPrompt, missingSymbols } = await prompt.generateFullPrompt();
       console.log(`---- PROMPT ----`);
-      console.log(await prompt.generateFullPrompt());
+      console.log(fullPrompt);
       console.log(`----`);
+      console.log(`Missing symbols: ${missingSymbols.join(", ")}`);
 
       // await prompt.generateFile(true);
     } catch (error) {

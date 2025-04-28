@@ -1,15 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.splitPreamble = splitPreamble;
-// helpers/splitPreamble.ts
-const promises_1 = require("node:fs/promises");
 /**
  * Reads `filePath`, returns `{ preamble, body }` where:
  *   • `preamble` – parsed key/value pairs ({} if none)
  *   • `body`     – everything after the first `---` delimiter
  */
-async function splitPreamble(filePath) {
-    const raw = await (0, promises_1.readFile)(filePath, "utf8");
+async function splitPreamble(raw) {
     const lines = raw.split(/\r?\n/);
     const idx = lines.findIndex((l) => l.trim() === "---");
     if (idx === -1)

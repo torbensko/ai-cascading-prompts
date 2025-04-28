@@ -10,9 +10,9 @@ export type Preamble = Record<string, string>;
  *   • `body`     – everything after the first `---` delimiter
  */
 export async function splitPreamble(
-  filePath: string,
+  raw: string,
 ): Promise<{ preamble: Preamble; body: string }> {
-  const raw = await readFile(filePath, "utf8");
+
   const lines = raw.split(/\r?\n/);
   const idx = lines.findIndex((l) => l.trim() === "---");
 
