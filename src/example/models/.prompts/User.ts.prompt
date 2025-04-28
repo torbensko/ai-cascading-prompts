@@ -4,5 +4,3 @@ Create a User model/DTO with the fields:
 - dob: string (YYYY-MM-DD)
 - createdAt: string/Date
 - updatedAt: string/Date
-
-Use the $missingFunction$ to generate the code.

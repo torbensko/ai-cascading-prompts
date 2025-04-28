@@ -84,7 +84,7 @@ class Prompt {
         promptParts.push(this.basePrompt.trim() + "\n");
         /* pattern blocks */
         if (this.patterns.length) {
-            promptParts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
+            promptParts.push(this.patterns.reverse().map((p) => p.content.trim()).join("\n\n"));
         }
         // find any referenced symbols in the prompt, e.g. $User$
         const { symbols: symbolNames, cleanedPrompt } = (0, extractSymbolsFromPrompt_1.extractSymbolsFromPrompt)(promptParts.join("\n"));
@@ -102,6 +102,7 @@ class Prompt {
         }));
         const parts = [
             cleanedPrompt,
+            "\n",
             `The resulting code will be saved to: ${outputPath}`
         ];
         /* related symbol snippets */
@@ -128,7 +129,7 @@ class Prompt {
         if (this.dependencies) {
             parts.push("## Package dependencies", "For extra context, below provides a list of the current project dependencies. Where possible, existing dependencies should be used.", (0, packageDependenciesToString_1.packageDependenciesToString)(this.dependencies));
         }
-        parts.push("## Output", "The output should only include the code such that the result could be passed to the JSON.parse function. No other text should be included.", "Do not include any example usage in the output.");
+        parts.push("## Prompt Response", "The output should only include the code such that the result could be passed to the JSON.parse function. No other text should be included.", "Do not include any example usage in the output.");
         const finalPrompt = parts.filter(Boolean).join("\n").trimEnd().replace(/(?<!\n)\n(?=##\s)/g, '\n\n');
         return {
             fullPrompt: finalPrompt,

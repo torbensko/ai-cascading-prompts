@@ -8,17 +8,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const class_validator_1 = require("class-validator");
-// User model class
+const toCamelCase_1 = require("@/example/helpers/toCamelCase");
+/**
+ * User model class definition
+ */
 class User {
-    constructor(dto) {
-        this.id = dto.id;
-        this.name = dto.name;
-        this.dob = dto.dob;
-        this.createdAt = new Date(dto.createdAt);
-        this.updatedAt = new Date(dto.updatedAt);
+    constructor(userDTO) {
+        this.id = userDTO.id;
+        this.name = userDTO.name;
+        this.dob = userDTO.dob;
+        this.createdAt = new Date(userDTO.createdAt);
+        this.updatedAt = new Date(userDTO.updatedAt);
+        this.slug = (0, toCamelCase_1.toCamelCase)(userDTO.name);
         this.validate();
     }
-    // Convert model to DTO
+    /**
+     * Converts the User model instance back to a UserDTO
+     */
     toDTO() {
         return {
             id: this.id,
@@ -28,23 +34,24 @@ class User {
             updatedAt: this.updatedAt.toISOString(),
         };
     }
-    // Validate model fields
+    /**
+     * Validates the User model instance using class-validator
+     */
     validate() {
-        const errors = (0, class_validator_1.validateSync)(this);
-        if (errors.length > 0) {
-            throw new Error(`Validation failed: ${errors}`);
-        }
+        (0, class_validator_1.validateOrReject)(this).catch(errors => {
+            throw new Error(`Validation failed! Errors: ${errors}`);
+        });
     }
 }
 exports.User = User;
 __decorate([
-    (0, class_validator_1.IsUUID)()
+    (0, class_validator_1.IsString)()
 ], User.prototype, "id", void 0);
 __decorate([
     (0, class_validator_1.IsString)()
 ], User.prototype, "name", void 0);
 __decorate([
-    (0, class_validator_1.IsISO8601)()
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/)
 ], User.prototype, "dob", void 0);
 __decorate([
     (0, class_validator_1.IsDate)()
@@ -52,3 +59,6 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsDate)()
 ], User.prototype, "updatedAt", void 0);
+__decorate([
+    (0, class_validator_1.IsString)()
+], User.prototype, "slug", void 0);

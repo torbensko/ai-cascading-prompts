@@ -19,13 +19,14 @@ const openai = new openai_1.default({ apiKey });
 /* ------------------------------------------------------------- */
 async function sendPromptToOpenAI(prompt, promptModel) {
     /* 2-a ▸ hierarchy for choosing the model
-       ───────────────────────────────────────
-          1.  model: …           (in the pre-amble)
-          2.  $OPENAI_GPT_MODEL_DEFAULT
-          3.  "gpt-4o-mini"      (hard fallback)                      */
+    ───────────────────────────────────────
+      1.  model: …           (in the pre-amble)
+      2.  $OPENAI_GPT_MODEL_DEFAULT
+      3.  "gpt-4o-mini"      (hard fallback)                      */
     const model = promptModel ||
         process.env.OPENAI_GPT_MODEL_DEFAULT ||
         "gpt-4o-mini";
+    console.log(`Using model: ${model}`);
     return await openai.chat.completions.create({
         model,
         messages: [{ role: "user", content: prompt }],

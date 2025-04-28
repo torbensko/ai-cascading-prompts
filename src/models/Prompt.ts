@@ -68,7 +68,7 @@ export class Prompt {
 
     /* pattern blocks */
     if (this.patterns.length) {
-      promptParts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
+      promptParts.push(this.patterns.reverse().map((p) => p.content.trim()).join("\n\n"));
     }
 
     // find any referenced symbols in the prompt, e.g. $User$
@@ -91,6 +91,7 @@ export class Prompt {
 
     const parts: string[] = [
       cleanedPrompt,
+      "\n",
       `The resulting code will be saved to: ${outputPath}`
     ];
 
@@ -144,7 +145,7 @@ export class Prompt {
     }
 
     parts.push(
-      "## Output",
+      "## Prompt Response",
       "The output should only include the code such that the result could be passed to the JSON.parse function. No other text should be included.",
       "Do not include any example usage in the output."
     )
