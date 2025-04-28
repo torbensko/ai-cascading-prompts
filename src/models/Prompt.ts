@@ -1,12 +1,13 @@
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
-import { SymbolDefinition } from "../helpers/findSymbolDefinition";
+import { findSymbolDefinition, SymbolDefinition } from "../helpers/findSymbolDefinition";
 import { PromptPattern } from "../helpers/loadPromptPatterns";
 import { PackageJson } from "../helpers/getPackageDependencies";
 import { packageDependenciesToString } from "../helpers/packageDependenciesToString";
 import { Preamble } from "../helpers/splitPreamble";
 import { sendPromptToOpenAI } from "../helpers/sendPromptToOpenAI";
 import { extractCodeFromGptResponse } from "../helpers/extractCodeFromGptResponse";
+import { extractSymbolsFromPrompt } from "../helpers/extractSymbolsFromPrompt";
 
 export class Prompt {
   private patterns: PromptPattern[] = [];
@@ -18,7 +19,6 @@ export class Prompt {
     public readonly promptPath: string,
     public readonly targetPath: string,
     public readonly rootDir: string,
-    public readonly symbols: SymbolDefinition[] = [],
     readonly preamble: Preamble = {},
   ) { }
 
@@ -46,29 +46,54 @@ export class Prompt {
 
   /* ------------------------- assembler ---------------------------------- */
 
-  generateFullPrompt(): string {
-    const parts: string[] = [];
+  async generateFullPrompt(): Promise<string> {
 
-    /* 0️⃣  main prompt text */
-    parts.push(this.basePrompt.trim() + "\n");
-
-    /* 1️⃣  pattern blocks */
-    if (this.patterns.length) {
-      parts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
-    }
     const outputPath = path.relative(
       this.rootDir,
       this.targetPath,
     ).replace(/\\/g, "/");
 
-    parts.push(`The resulting code will be saved to: ${outputPath}`);
+    const promptParts: string[] = []
+    /* 0️⃣  main prompt text */
+    promptParts.push(this.basePrompt.trim() + "\n");
+
+    /* 1️⃣  pattern blocks */
+    if (this.patterns.length) {
+      promptParts.push(this.patterns.map((p) => p.content.trim()).join("\n\n"));
+    }
+
+    // find any referenced symbols in the prompt, e.g. $User$
+    const { symbols: symbolNames, cleanedPrompt } = extractSymbolsFromPrompt(promptParts.join("\n"));
+
+    // find the definition for each symbol in the codebase
+    const symbolDefs: SymbolDefinition[] = [];
+    let missingSymbols: string[] = [];
+
+    await Promise.all(
+      symbolNames.map(async (sym) => {
+        const symbol = await findSymbolDefinition(sym, { rootDir: this.rootDir });
+        if (symbol?.length) {
+          symbolDefs.push(symbol[0]);
+        } else {
+          missingSymbols.push(sym);
+        }
+      })
+    );
+
+    // check if any symbols are missing - this might be because the symbol is not defined yet or has been incorrectly referenced
+    if (missingSymbols.length) throw new Error(`Unable to find: ${missingSymbols.join(", ")}`);
+
+    const parts: string[] = [
+      cleanedPrompt,
+      `The resulting code will be saved to: ${outputPath}`
+    ];
 
     /* 2️⃣  related symbol snippets */
-    if (this.symbols.length) {
+    if (symbolDefs.length) {
       const symText =
-        this.symbols
+        symbolDefs
           .map(
-            (s) =>
+            (s: SymbolDefinition) =>
               [
                 `\nContents of ${s.filePath}:`,
                 "```" + path.extname(s.filePath).slice(1),
@@ -127,10 +152,12 @@ export class Prompt {
       try {
         // check if there is a model specified in the preamble
         const promptSpecificModel = this.getPreamble().model?.trim()
-        const fullPrompt = this.generateFullPrompt();
+        // can throw if some of the symbols are not found
+        const fullPrompt = await this.generateFullPrompt();
         const completion = await sendPromptToOpenAI(fullPrompt, promptSpecificModel);
         const content =
           completion.choices?.[0]?.message?.content?.trimStart() ?? "";
+        // this can throw an error if the response does not follow the expected format
         const codeBlock = extractCodeFromGptResponse(content);
 
         // Ensure parent folders exist, then write.

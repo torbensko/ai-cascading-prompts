@@ -12,24 +12,12 @@ export async function loadPrompt(
   // 1️⃣  pre-amble vs. body
   const { preamble, body } = await splitPreamble(file.promptPath);
 
-  // 2️⃣  placeholders (body only)
-  const { symbols: names, cleanedPrompt } = extractSymbolsFromPrompt(body);
-
-  // 3️⃣  resolve symbols
-  const defs = await Promise.all(
-    names.map(async (sym) => (await findSymbolDefinition(sym, { rootDir }))?.[0]),
-  );
-
-  const missing = names.filter((_, i) => !defs[i]);
-  if (missing.length) throw new Error(`Missing symbol definitions for: ${missing.join(", ")}`);
-
   // 4️⃣  class instance
   return new Prompt(
-    cleanedPrompt,
+    body,
     file.promptPath,
     file.targetPath,
     file.rootDir,
-    defs.filter(Boolean) as SymbolDefinition[],
     preamble,
   );
 }

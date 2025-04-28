@@ -53,6 +53,7 @@ export async function findSymbolDefinition(
     "const",
     "let",
     "var",
+    "function",
   ];
 
   const regex = new RegExp(
