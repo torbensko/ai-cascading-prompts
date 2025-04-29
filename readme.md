@@ -9,7 +9,7 @@ following:
   directory will automatically be included in any generated prompt, whereas a
   shared prompt in the `models` folder will only be included in the generated model
   prompts.
-- Any referenced symbols surrounded by '$' characters (e.g. $UserDTO$) will be
+- Any referenced symbols surrounded by the `$` character (e.g. `$UserDTO$`) will be
   looked up in the codebase and its source file will be included. The prompt
   will not be generated if the symbol cannot be found. If the symbol has instead
   not been generated yet, the script will iteratively keep trying until no
@@ -33,6 +33,7 @@ yarn install ai-cascading-prompts
 
 The project directory will typically look as follows:
 
+```txt
 src/
 ├── .patterns/
 │   └── index.pattern         // 1) applied to all prompts
@@ -42,6 +43,7 @@ src/
     │   └── User.ts.prompt    // 3) prompt to create a user
     └── .patterns/
         └── index.pattern     // 2) applied to all model prompts
+```
 
 The contents of these files might be as follows:
 
