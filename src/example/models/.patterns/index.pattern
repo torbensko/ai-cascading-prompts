@@ -11,4 +11,3 @@ Models should follow these rules:
 - Models fields should include `class-validator` decorations to validate the data. It should provide a `.validate()` function which should be called during the initialisation.
 - Discriminated union fields should be converted to enumerations.
 - Timestamps should be converted to a Date object.
-- All models should include a `slug` field and use the $toCamelCase$ function to convert the name.

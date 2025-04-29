@@ -129,7 +129,7 @@ class Prompt {
         if (this.dependencies) {
             parts.push("## Package dependencies", "For extra context, below provides a list of the current project dependencies. Where possible, existing dependencies should be used.", (0, packageDependenciesToString_1.packageDependenciesToString)(this.dependencies));
         }
-        parts.push("## Prompt Response", "The output should only include the code such that the result could be passed to the JSON.parse function. No other text should be included.", "Do not include any example usage in the output.");
+        parts.push("## Prompt Response", "The output should only include a single codeblock such that the result could be passed to the JSON.parse function. No other text should be included.", "Do not include any example usage in the output.");
         const finalPrompt = parts.filter(Boolean).join("\n").trimEnd().replace(/(?<!\n)\n(?=##\s)/g, '\n\n');
         return {
             fullPrompt: finalPrompt,

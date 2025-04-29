@@ -25,7 +25,7 @@ const baseDir = "./src";
     let successfulIteration = true;
     do {
         successfulIteration = false;
-        for (const promptFile of newPrompts) {
+        for (const promptFile of remainingPrompts) {
             console.log(`Producing: ${promptFile.targetPath}\n`);
             // Find the symbol definition for each new prompt
             try {
